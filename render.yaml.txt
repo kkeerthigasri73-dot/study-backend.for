@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: study-backend
+    env: python
+    buildCommand: ""
+    startCommand: bash start.sh
+    autoDeploy: true
