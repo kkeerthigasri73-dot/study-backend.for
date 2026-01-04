@@ -17,9 +17,10 @@ except LookupError:
     except Exception as e:
         logger.error(f"Failed to download NLTK punkt: {e}")
 
+# FastAPI app with title/version so Swagger UI loads
 app = FastAPI(title="Study Backend", version="1.0.0")
 
-# CORS for Flutter/web
+# Enable CORS for Flutter/web clients
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root and health endpoints to avoid 404 confusion
+# Root and health endpoints
 @app.get("/")
 def root():
     return {"status": "ok", "message": "Use /docs for API UI."}
@@ -36,7 +37,7 @@ def root():
 def health():
     return {"status": "healthy"}
 
-# Safe PDF text extraction
+# Safely extract text from PDF
 def read_pdf_bytes(file_bytes: bytes) -> str:
     import io
     text = ""
@@ -50,6 +51,7 @@ def read_pdf_bytes(file_bytes: bytes) -> str:
         logger.error(f"PDF read error: {e}")
     return text.strip()
 
+# Search for a query in PDF
 @app.post("/search")
 async def search_pdf(file: UploadFile, query: str = Form(...)):
     content = await file.read()
@@ -64,6 +66,7 @@ async def search_pdf(file: UploadFile, query: str = Form(...)):
     results = [s for s in sentences if query.lower() in s.lower()]
     return {"results": results[:10]}
 
+# Summarize PDF content
 @app.post("/summarize")
 async def summarize_pdf(file: UploadFile):
     content = await file.read()
@@ -78,6 +81,7 @@ async def summarize_pdf(file: UploadFile):
     summary = " ".join(sentences[:5]) if sentences else "No content found in PDF."
     return {"summary": summary}
 
+# Generate quiz from PDF
 @app.post("/quiz")
 async def generate_quiz(file: UploadFile):
     content = await file.read()
@@ -102,6 +106,7 @@ async def generate_quiz(file: UploadFile):
             })
     return {"quiz": quiz if quiz else ["No quiz could be generated."]}
 
+# Convert text to voice (Tamil default)
 @app.post("/voice")
 async def voice(text: str = Form(...), lang: str = Form("ta")):
     filename = "voice_output.mp3"
